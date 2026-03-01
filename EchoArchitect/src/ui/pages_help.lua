@@ -11,152 +11,217 @@ T:ApplyPanel(Page,"bg")
 local function sectionText()
   return {
     weights=[[
-Echo Weights & Buckets
+|cff00ffffEchoArchitect|r makes decisions based on a weight system.
+Every Echo has a value. Every quality can modify that value.
 
-EchoArchitect decides which Echo to take by giving every Echo a score. The score is based on its Weight, its Quality, and whether it belongs to a Bucket with Stacks.
+The addon always compares total calculated weight when choosing between:
+• Picking
+• Rerolling
+• Banishing
+Higher weight = higher priority.
 
-Weights
-- Every Echo in the library has a Weight per Quality (Common/Uncommon/Rare/etc).
-- Higher Weight means the Echo is preferred more often.
-- Weight 0 means neutral (it can still be picked if nothing better exists).
-- Negative Weight means the Echo is actively avoided and will only be picked if your rules force it.
+|cff00ffffUnderstanding Weights|r
+Each Echo can have:
+• A base weight
+• A quality bonus
+• A quality multiplier
 
-Quality
-- Quality is the game’s roll for that Echo (Common, Uncommon, Rare, etc).
-- Each quality is tracked separately in the library, so you can prefer a Rare version and dislike a Common version of the same Echo.
+Final Value =
+(Base Weight + Bonus) × Multiplier
 
-Buckets
-Buckets let you group Echoes that “compete” with each other by limiting how many of that group can be taken.
+Weights represent preference, not promise.
 
-Example
-- Bucket: "Movement"
-- Echoes: Sprint Echo, Dash Echo, etc
-- Max Stacks: 1
-This means you can only take one total from that bucket.
+|cff00ffffQuality Bonus & Multiplier|r
+Bonus adds flat value.
+Multiplier scales the total weight.
 
-How Buckets work
-- You assign Echo entries (spell + quality) to a bucket from the library list.
-- Buckets have Max Stacks.
-- If the bucket is at max stacks, EchoArchitect treats additional bucket echoes as blocked and will avoid picking them.
+Use Quality Weighting when:
+• You slightly prefer higher rarity.
+• Weighting is generalized.
 
-Why use Buckets
-- Prevent stacking too many similar effects.
-- Force variety across a run.
-- Keep the optimizer from repeatedly grabbing "fine but redundant" bonuses.
+|cff00ffffWhat Buckets Do|r
+Buckets prevent over-stacking similar effects.
+Example:
+You create a bucket called |cff00ff00Hit Rating|r.
+You add |cff00ffffKeen Aim|r to that bucket.
+If Keen Aim appears multiple times:
+The bucket tracks how many “Hit Rating” effects you already have.
+You can then:
+• Reduce weight after X stacks
+• Prevent excessive stacking
 
-Tips
-- Start with buckets for large categories: Defense, Mobility, Utility, Single Target, AoE.
-- Use low stacks (1–2) for "unique utility" buckets.
-- Use higher stacks for "core scaling" buckets if you truly want them to stack.
+|cffffcc00Why Buckets Matter|r
+Without Buckets:
+Automation may overvalue repeated stats, as for example, Keen Aim does not have it's weight reduced for each instance of it.
+This could lead to over valuing Hit Rating even though you have reached the Hit cap.
 
+|cff00ff00Best Practice|r
+• Keep weights logical.
+• Use Buckets for specific categories.
+• Avoid extreme values unless intentional.
 ]],
 
     profiles=[[
-Profile Information
+Profiles store your complete |cff00ffffEchoArchitect|r configuration.
+A profile includes:
+• All Echo weights
+• Bucket assignments
+• Quality bonuses and multipliers
+• Automation settings
 
-A Profile contains everything that affects decision-making:
-- Your Echo Library weights (per spell + quality)
-- Your bucket definitions (name, max stacks, and which echoes belong)
-- Any per-profile preferences that influence picks and rerolls
+|cff00ffffWhy Use Profiles?|r
+Profiles allow you to:
+• Separate builds for the same class
+• Share setups with other players
+• Quickly swap Weights for different purposes
 
-Active Profile
-- The Active Profile is what EchoArchitect uses right now.
-- Switching profiles instantly changes which weights/buckets are in effect.
+|cff00ffffSwitching Profiles|r
+Switching profiles:
+• Immediately applies new weights
+• Updates automation behavior
+• Changes bucket logic
 
-Why multiple profiles help
-- Different specs/roles: Tank vs DPS vs Healer
-- Different play styles: Speedrun vs Safe
-- Different characters with different goals
+Do not switch mid-session unless intentional.
 
-What is NOT a Profile
-- Session logbook history is tracked separately.
-- Per-character UI placement/scale is stored separately.
+|cff00ffffGood Profile Habits|r
+• Keep one stable “Main” profile.
+• Create test profiles for experimentation.
+• Export before major adjustments.
+• Rename clearly to avoid confusion.
 
-Recommended workflow
-1) Create a base profile (balanced).
-2) Duplicate it into specialized profiles.
-3) Adjust weights/buckets in the specialized ones.
-4) Swap profiles when you change goals.
+|cff00ff00Friendly Tip|r
+If behavior feels inconsistent,
+verify the active profile before adjusting weights.
+Most confusion comes from editing the wrong profile.
 
+Share your Profiles on the Ebonhold Discord for other players!
 ]],
 
     impex=[[
-Importing and Exporting
+Profiles can be shared via export strings.
+This allows:
+• Backup of your configuration
+• Sharing builds with friends
+• Transferring setups between characters
 
-IMPORTANT WARNING
-When Importing or Exporting Profiles, the game can freeze or hitch for a while. This is normal. Do NOT force close WoW. Wait until it finishes.
+|cffff0000IMPORTANT WARNING|r
+|cffff8800When importing or exporting large logbook databases,
+the game may freeze temporarily.|r
 
-Why it can freeze
-- Profiles can contain a lot of data (many echoes, many buckets).
-- The game has to serialize or deserialize that data inside the UI thread.
-- Large strings and table rebuilds can stall the client briefly.
+This is normal behavior.
+Do NOT:
+• Force close the game
+• Alt+F4
+• Reload UI repeatedly
+Wait until the operation completes.
 
-Best practices
-- Do imports/exports in a safe location (not mid-combat).
-- Avoid spamming the import button if the UI seems stuck.
-- If you are exporting a large profile, give it time.
+|cff00ffffBefore Importing|r
+• Ensure you are on the correct profile.
+• Backup your current profile.
+• Confirm the string source is trusted.
 
-What gets exported
-- Profile weights for each Echo + quality
-- Bucket definitions, including max stacks and assigned echoes
-- Any profile-level settings that affect decisions
+|cff00ffffAfter Importing|r
+• Review weights and buckets.
+• Verify automation settings.
+• Run a short test session.
 
-What does not get exported
-- Session history/logbook data
-- Per-character UI placement and scale
-
-If an import fails
-- Double check you copied the whole string.
-- Make sure it is from the same addon version family.
-- Try reloading the UI and importing again.
-
+|cff00ffffWhy Importing / Exporting Matters|r
+Eventually, we'll be able to build a singular database for quality chances per level and chances per echo.
 ]],
 
     settings=[[
-Settings Explained
+|cffffcc00Understanding the Settings Page|r
+The Settings page controls how |cff00ffffEchoArchitect|r behaves during a session.
+Every option here directly affects:
+• Automation decisions  
+• Reroll behavior  
+• Safety pauses  
+• Visual display  
+Think of this page as the engine control panel.
 
-The Settings page controls how EchoArchitect behaves during a session.
+|cffffcc00Live Session Impact|r
+Changes to Settings apply immediately during a session.
+Be mindful when adjusting:
+• Threshold values  
+• Reroll aggressiveness  
+• Automation speed  
+Sudden changes can alter decision behavior instantly.
+Consider only tuning settings while either preparing for a session, or after a session has ended.
 
-Common concepts
-- Automation toggles: whether EchoArchitect should auto-pick, auto-reroll, or just advise.
-- Safety rules: conditions that pause automation to prevent bad states.
-- UI behavior: window scale, tooltip modes, and display options.
+|cff00ffffAutomation Toggles|r  
+These determine whether |cff00ffffEchoArchitect|r:
+• Automatically picks Echoes  
+• Automatically rerolls  
+• Automatically banishes  
+• Or simply advises without acting  
+If disabled, the addon will observe but not intervene.
 
-Typical setup
-- Start with conservative automation.
-- Enable stronger automation only after you trust your weights/buckets.
-- If something feels “too aggressive”, lower weights instead of hard blacklisting everything.
+|cff00ffffSafety Rules|r  
+These are protective systems that pause automation to prevent:
+• Picking low-value Echoes  
+• Over-stacking duplicates  
+• Acting when multiple strong options exist  
+Safety rules are highly recommended for stable sessions.
 
-If a setting seems unclear
-- Look at what it changes in the live session.
-- Use a small test run and compare behavior with the setting on/off.
+|cff00ffffUI Behavior|r  
+Controls visual and interface-related features such as:
+• UI Scale  
+• Tooltip modes  
+• Start/Stop button display  
+• Remaining counters visibility  
 
+|cff00ff00Scale Gradually|r  
+Once your Weights and Buckets are well-tuned:
+• Increase reroll aggressiveness  
+• Raise threshold values  
+• Enable stronger automation options  
+
+|cffffcc00Important Advice|r
+If something feels “too aggressive”:
+• Lower the Echo weights  
+• Adjust Quality multipliers  
+• Refine Buckets  
+
+Avoid hard-blacklisting everything as it reduces flexibility.
+Automation amplifies your logic, it does not replace it.
 ]],
 
     support=[[
-Support & Features
+|cff00ffffEchoArchitect|r is designed to be:
+• Stable
+• Predictable
+• Logic-driven
+• Single session focused
 
-What EchoArchitect is for
-- Track and optimize Echo picks over a session.
-- Let you build a preference model (weights) per Echo and per quality.
-- Prevent over-stacking via Buckets.
-- Keep a clear record in History/Logbook.
+|cff00ffffWhat It Is Designed For|r
+• Automated Echo optimization
+• Structured weight-based decision making
+• Controlled reroll behavior
 
-If you want a feature
-- Describe the goal (what you want the addon to accomplish).
-- Include where it should appear in the UI.
-- Include examples of how it should behave in edge cases.
+|cff00ffffWhat It Is NOT|r
+• A random Echo picker
+• A guaranteed “best build” generator
+• A replacement for build knowledge
+It enhances your logic, it does not replace it.
 
-If something breaks
-- Provide the exact error message from the WoW error frame.
-- Tell what you clicked just before it happened.
-- Include whether it was after an import, profile switch, or a reload.
+|cff00ffffWhen Suggesting a Feature|r
+Please include:
+• The goal of the feature
+• Where it should appear in the UI
+• How it should behave in edge cases
+• What problem it solves
 
-Quality-of-life ideas that fit well
-- More filters/searching in the library
-- Better preset profiles
-- More session summaries
+|cff00ffffWhen Reporting a Bug|r
+Include:
+• The exact error message
+• What you were doing before it happened
+• When exactly it occurred
+• Potential steps to reproduce
 
+|cffffcc00Contact & Support|r
+For feedback, bug reports, or feature requests:
+Contact James on Discord:
+|cff00ffffbadutski2|r
 ]]
   }
 end
@@ -171,7 +236,7 @@ top:SetHeight(34)
 
 local btns={}
 local defs={
-  {id="weights",label="Echo Weights & Bucket"},
+  {id="weights",label="Echo Weights & Buckets"},
   {id="profiles",label="Profile Information"},
   {id="impex",label="Importing and Exporting"},
   {id="settings",label="Settings Explained"},
@@ -179,9 +244,11 @@ local defs={
 }
 local function styleButton(b,sel)
   if sel then
-    b._bg:SetVertexColor(0.10,0.35,0.55,0.45)
+    if b.LockHighlight then b:LockHighlight() end
+    if b._sel then b._sel:Show() end
   else
-    b._bg:SetVertexColor(0,0,0,0)
+    if b.UnlockHighlight then b:UnlockHighlight() end
+    if b._sel then b._sel:Hide() end
   end
 end
 
@@ -189,20 +256,30 @@ local btnOrder={}
 for i=1,#defs do
   local d=defs[i]
   local b=W:Button(top,d.label,150,26,function()
-    current=d.id
-    Page:Update()
+    Page:Select(d.id)
   end)
-  b._bg=b:CreateTexture(nil,"BACKGROUND")
-  b._bg:SetAllPoints(b)
-  b._bg:SetTexture("Interface\ChatFrame\ChatFrameBackground")
-  b._bg:SetVertexColor(0,0,0,0)
+  b._sel=b:CreateTexture(nil,"ARTWORK")
+  b._sel:SetAllPoints(b)
+  b._sel:SetTexture("Interface\Buttons\WHITE8X8")
+  b._sel:SetVertexColor(0.10,0.35,0.55,0.35)
+  b._sel:Hide()
   btns[d.id]=b
   btnOrder[i]=b
 end
 
 function Page:Layout()
   local w=top:GetWidth() or 0
-  if w<200 then return end
+  if w<200 then
+    local x=0
+    for i=1,#btnOrder do
+      local b=btnOrder[i]
+      b:ClearAllPoints()
+      b:SetPoint("LEFT",top,"LEFT",x,0)
+      b:SetWidth(150)
+      x=x+156
+    end
+    return
+  end
   local gap=6
   local n=#btnOrder
   local bw=math.floor((w-(gap*(n-1)))/n)
@@ -231,7 +308,7 @@ content:SetPoint("TOPLEFT",sf,"TOPLEFT",0,0)
 content:SetPoint("TOPRIGHT",sf,"TOPRIGHT",0,0)
 sf:SetScrollChild(content)
 
-local text=T:Font(content,12,"")
+local text=T:Font(content,13,"")
 text:SetPoint("TOPLEFT",content,"TOPLEFT",6,-6)
 text:SetPoint("TOPRIGHT",content,"TOPRIGHT",-26,-6)
 text:SetJustifyH("LEFT")
@@ -251,9 +328,10 @@ function Page:Update()
   local t=sections[current] or ""
   text:SetText(t)
   local w=body:GetWidth() or 0
-  if w<200 then w=500 end
-  text:SetWidth(w-40)
-  text:SetHeight(1)
+  local tw
+  if w<200 then tw=460 else tw=w-40 end
+  if tw<200 then tw=460 end
+  text:SetWidth(tw)
   local h=(text:GetStringHeight() or 0)+20
   if h<1 then h=1 end
   content:SetHeight(h)
@@ -269,7 +347,44 @@ function Page:Update()
   end
 end
 
-Page:SetScript("OnShow",function() Page:Layout() Page:Update() end)
-Page:SetScript("OnSizeChanged",function() if Page:IsShown() then Page:Layout() Page:Update() end end)
+function Page:Select(id)
+  if id and sections[id] then current=id end
+  self:Layout()
+  self:Update()
+  if sf and sf.SetVerticalScroll then sf:SetVerticalScroll(0) end
+end
+
+local function ensureWidth()
+  local bw=body:GetWidth() or 0
+  if bw<200 then
+    local pw=Page:GetWidth() or 0
+    if pw>240 then bw=pw-20 end
+  end
+  if bw<200 then bw=600 end
+  content:SetWidth(bw)
+end
+
+local oldUpdate=Page.Update
+function Page:Update()
+  ensureWidth()
+  oldUpdate(self)
+end
+
+Page:SetScript("OnShow",function()
+  Page:Select("weights")
+end)
+
+body:SetScript("OnSizeChanged",function()
+  if Page:IsShown() then
+    Page:Layout()
+    Page:Update()
+  end
+end)
+
+top:SetScript("OnSizeChanged",function()
+  if Page:IsShown() then
+    Page:Layout()
+  end
+end)
 
 Win:RegisterPage("help",Page)

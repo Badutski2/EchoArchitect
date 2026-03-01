@@ -110,12 +110,7 @@ i3Text:SetJustifyH("LEFT")
 i3Text:SetJustifyV("TOP")
 i3Text:SetWordWrap(true)
 i3Text:SetNonSpaceWrap(true)
-i3Text:SetText([[- Echo Library: Inspector moved
-- Echo Library/Buckets resized
-- Help & Info page
-- Start/Stop: Picks left
-- Start/Stop: Banishes left
-- Start/Stop: Rerolls left]])
+i3Text:SetText("- Echo Library: Inspector moved\n- Echo Library/Buckets resized\n- Help & Info page\n- Start/Stop: Picks left\n- Start/Stop: Banishes left\n- Start/Stop: Rerolls left")
 
 local madeRow=CreateFrame("Frame",nil,col3)
 madeRow:SetPoint("BOTTOMRIGHT",col3,"BOTTOMRIGHT",0,0)

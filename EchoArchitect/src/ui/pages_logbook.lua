@@ -277,13 +277,16 @@ local searchLabel=W:Label(right,"Search",12)
 searchLabel:SetPoint("TOPLEFT",right,"TOPLEFT",10,-10)
 local searchBox=W:EditBox(right,190,20)
 searchBox:SetPoint("LEFT",searchLabel,"RIGHT",8,0)
-local searchModeBtn=W:Button(right,"Search: Name+Rarity",140,20,function()
+local searchModeBtn
+searchModeBtn=W:Button(right,"Search: Name+Rarity",140,20,function()
   local s=sortState()
   s.searchMode=(s.searchMode=="tooltip") and "name" or "tooltip"
   if s.searchMode=="tooltip" then searchModeBtn:SetText("Search: Tooltip") else searchModeBtn:SetText("Search: Name+Rarity") end
   Page:UpdateList()
 end)
 searchModeBtn:SetPoint("LEFT",searchBox,"RIGHT",10,0)
+local ss=sortState()
+if ss.searchMode=="tooltip" then searchModeBtn:SetText("Search: Tooltip") else searchModeBtn:SetText("Search: Name+Rarity") end
 local exportBtn=W:Button(right,"Export",80,20,function()
   if Page._export and Page._export.ShowExport then Page._export:ShowExport() end
 end)
