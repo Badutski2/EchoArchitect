@@ -53,6 +53,9 @@ P.profileDefaults={
   echoBucket={},
   automation={
     showStartStopButton=true,
+    showStartStopRemainingEchoes=true,
+    showStartStopRemainingRerolls=true,
+    showStartStopRemainingBanishes=true,
     hidePerkFrameWhileRunning=false,
     enablePick=true,
     enableReroll=true,
@@ -144,6 +147,12 @@ function P:GetActiveProfile()
     if pr.automation and pr.automation.safetyLock~=nil then pr.automation.safetyLock=nil end
   end
   ensureDefaultBucket(pr)
+  if pr and pr.automation then
+    if pr.automation.showStartStopRemainingRerolls==nil and pr.automation.showStartStopRemainingPicks~=nil then
+      pr.automation.showStartStopRemainingRerolls=pr.automation.showStartStopRemainingPicks
+    end
+    pr.automation.showStartStopRemainingPicks=nil
+  end
   return pr
 end
 function P:EnsureProfile(name)

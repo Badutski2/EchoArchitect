@@ -253,7 +253,37 @@ local sliderW=contentW-64
 if sliderW<180 then sliderW=180 end
 local sUIScale=W:Slider(R.p,"UI Scale",uiScaleMin,uiScaleMax,uiScaleStep,sliderW,function() end,function(v) return string.format("%.2f",v) end)
 place(sUIScale,R.p,R.y)
+R.y=R.y-24
 sUIScale._get=function() return getUIScale() end
+
+R.y=R.y-24
+sep(R,"Start/Stop Button Texts")
+local chkRemEchoes=addCheck(R,"Remaining Echoes",function()
+  local p=pr() return p and p.automation and p.automation.showStartStopRemainingEchoes~=false
+end,function(v)
+  local p=pr() if not p then return end
+  p.automation=p.automation or {}
+  p.automation.showStartStopRemainingEchoes=v
+  if EA and EA.UI and EA.UI.StartStop and EA.UI.StartStop.Refresh then EA.UI.StartStop:Refresh() end
+end)
+
+local chkRemRerolls=addCheck(R,"Remaining Rerolls",function()
+  local p=pr() return p and p.automation and p.automation.showStartStopRemainingRerolls~=false
+end,function(v)
+  local p=pr() if not p then return end
+  p.automation=p.automation or {}
+  p.automation.showStartStopRemainingRerolls=v
+  if EA and EA.UI and EA.UI.StartStop and EA.UI.StartStop.Refresh then EA.UI.StartStop:Refresh() end
+end)
+local chkRemBanishes=addCheck(R,"Remaining Banishes",function()
+  local p=pr() return p and p.automation and p.automation.showStartStopRemainingBanishes~=false
+end,function(v)
+  local p=pr() if not p then return end
+  p.automation=p.automation or {}
+  p.automation.showStartStopRemainingBanishes=v
+  if EA and EA.UI and EA.UI.StartStop and EA.UI.StartStop.Refresh then EA.UI.StartStop:Refresh() end
+end)
+
 local function clampUIScale(v)
   v=tonumber(v or 1) or 1
   if v<uiScaleMin then v=uiScaleMin end
@@ -336,6 +366,9 @@ local function refresh()
   chkHidePerks:SetValue(p.automation.hidePerkFrameWhileRunning)
   chkPick:SetValue(p.automation.enablePick)
   chkReroll:SetValue(p.automation.enableReroll)
+  if chkRemEchoes then chkRemEchoes:SetValue(p.automation.showStartStopRemainingEchoes~=false) end
+  if chkRemRerolls then chkRemRerolls:SetValue(p.automation.showStartStopRemainingRerolls~=false) end
+  if chkRemBanishes then chkRemBanishes:SetValue(p.automation.showStartStopRemainingBanishes~=false) end
   chkBanish:SetValue(p.automation.enableBanish)
   sSpeed:SetValue(p.automation.speed)
   chkPauseMulti:SetValue(p.automation.pauseIfMultipleAbove)

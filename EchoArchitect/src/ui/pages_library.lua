@@ -84,8 +84,8 @@ local hBucket=W:Button(headers,"Bucket",BUCKET_W,18,function() Page:ToggleSort("
   hBucket:SetPoint("LEFT",hName,"RIGHT",GAP,0)
 local list=CreateFrame("Frame",nil,left)
 list:SetPoint("TOPLEFT",headers,"BOTTOMLEFT",0,-8)
-list:SetPoint("BOTTOMLEFT",left,"BOTTOMLEFT",0,250)
-list:SetPoint("BOTTOMRIGHT",left,"BOTTOMRIGHT",-LIST_RIGHT_INSET,250)
+list:SetPoint("BOTTOMLEFT",left,"BOTTOMLEFT",0,10)
+list:SetPoint("BOTTOMRIGHT",left,"BOTTOMRIGHT",-LIST_RIGHT_INSET,10)
 local colSep=CreateFrame("Frame",nil,left)
 colSep:SetPoint("TOPLEFT",headers,"TOPLEFT",0,0)
 colSep:SetPoint("BOTTOMRIGHT",list,"BOTTOMRIGHT",0,0)
@@ -135,7 +135,7 @@ local lsb=_G[scroll:GetName().."ScrollBar"]
 if lsb then
   lsb:ClearAllPoints()
   lsb:SetPoint("TOPLEFT",scroll,"TOPLEFT",0,0)
-  lsb:SetPoint("BOTTOMLEFT",scroll,"BOTTOMLEFT",0,-104)
+  lsb:SetPoint("BOTTOMLEFT",scroll,"BOTTOMLEFT",0,0)
   T:ApplyScrollBar(lsb)
   lsb:Show()
 end
@@ -151,7 +151,7 @@ end
 list:SetScript("OnMouseWheel",function(_,delta) wheel(delta) end)
 scroll:SetScript("OnMouseWheel",function(_,delta) wheel(delta) end)
 local rows={}
-local ROWS=11
+local ROWS=17
 local function QualityName(q)
   if q==0 then return "Common" end
   if q==1 then return "Uncommon" end
@@ -234,10 +234,10 @@ for i=1,ROWS do
   r._blk=blk
   rows[i]=r
 end
-local inspectorFrame=CreateFrame("Frame",nil,left)
-inspectorFrame:SetPoint("BOTTOMLEFT",left,"BOTTOMLEFT",10,10)
-inspectorFrame:SetPoint("BOTTOMRIGHT",left,"BOTTOMRIGHT",-10,10)
-inspectorFrame:SetHeight(130)
+local inspectorFrame=CreateFrame("Frame",nil,right)
+inspectorFrame:SetPoint("TOPLEFT",right,"TOPLEFT",10,-10)
+inspectorFrame:SetPoint("TOPRIGHT",right,"TOPRIGHT",-10,-10)
+inspectorFrame:SetHeight(150)
 local ibg=inspectorFrame:CreateTexture(nil,"BACKGROUND")
 ibg:SetAllPoints(inspectorFrame)
 ibg:SetTexture("Interface\\Buttons\\WHITE8X8")
@@ -317,12 +317,12 @@ vReqBtn:EnableMouse(true)
 vReqBtn._fs=T:Font(vReqBtn,12,"")
 vReqBtn._fs:SetPoint("LEFT",vReqBtn,"LEFT",0,0)
 local clsLabel=T:Font(insInfo,12,"")
-clsLabel:SetPoint("TOPLEFT",insInfo,"TOPLEFT",0,-114)
+clsLabel:SetPoint("TOPLEFT",insInfo,"TOPLEFT",0,-108)
 clsLabel:SetJustifyH("LEFT")
 clsLabel:SetText("Classes:")
 local clsFrame=CreateFrame("Frame",nil,insInfo)
-clsFrame:SetPoint("LEFT",clsLabel,"RIGHT",8,0)
-clsFrame:SetPoint("RIGHT",insInfo,"RIGHT",0,0)
+clsFrame:SetPoint("TOPLEFT",clsLabel,"BOTTOMLEFT",0,-6)
+clsFrame:SetPoint("TOPRIGHT",insInfo,"TOPRIGHT",0,-114)
 clsFrame:SetHeight(18)
 local classOrder={"WARRIOR","PALADIN","HUNTER","ROGUE","PRIEST","DEATHKNIGHT","SHAMAN","MAGE","WARLOCK","DRUID"}
 local classBits={WARRIOR=1,PALADIN=2,HUNTER=4,ROGUE=8,PRIEST=16,DEATHKNIGHT=32,SHAMAN=64,MAGE=128,WARLOCK=256,DRUID=1024}
@@ -372,16 +372,53 @@ insTip:SetPoint("BOTTOMRIGHT",tipAnchor,"BOTTOMRIGHT",0,0)
 insTip:SetScale(0.95)
 insTip:SetFrameStrata("TOOLTIP")
 
-local bSearchLbl=W:Label(right,"Search",12)
-bSearchLbl:SetPoint("TOPLEFT",right,"TOPLEFT",10,-10)
-local bSearch=W:EditBox(right,220,20)
+local bSettings=CreateFrame("Frame",nil,right)
+bSettings:SetPoint("TOPLEFT",inspectorFrame,"BOTTOMLEFT",0,-34)
+bSettings:SetPoint("TOPRIGHT",right,"TOPRIGHT",-LIST_RIGHT_INSET,-34)
+bSettings:SetHeight(72)
+local sbg=bSettings:CreateTexture(nil,"BACKGROUND")
+sbg:SetAllPoints(bSettings)
+sbg:SetTexture("Interface\\Buttons\\WHITE8X8")
+sbg:SetVertexColor(0.04,0.06,0.10,0.40)
+local selName=W:Label(bSettings,"",12)
+selName:SetAlpha(0)
+local newName=W:EditBox(bSettings,220,20)
+newName:SetPoint("TOPLEFT",bSettings,"TOPLEFT",8,-10)
+local btnCreate=W:Button(bSettings,"Create Bucket",110,20,function()
+  local pr=Page:EnsureBuckets()
+  if not pr then return end
+  local nm=newName:GetText() or ""
+  nm=string.gsub(nm,"^%s+","")
+  nm=string.gsub(nm,"%s+$","")
+  if nm=="" then return end
+  local bid="b"..tostring(GetTime())
+  pr.buckets[bid]={name=nm,maxStacks=0,echoKeys={}}
+  Page._bucketSelId=bid
+  newName:SetText("")
+  Page:UpdateBucketPanel()
+end)
+btnCreate:SetPoint("TOPRIGHT",bSettings,"TOPRIGHT",-8,-10)
+newName:SetPoint("RIGHT",btnCreate,"LEFT",-8,0)
+local bucketHint=T:Font(bSettings,11,"")
+bucketHint:SetFont("Fonts\\MORPHEUS.TTF",11,"")
+bucketHint:SetJustifyH("CENTER")
+bucketHint:SetText("It puts the lotion in the bucket")
+bucketHint:SetAlpha(0.65)
+bucketHint:SetPoint("TOP",btnCreate,"BOTTOM",0,-6)
+bucketHint:SetPoint("LEFT",bSettings,"LEFT",8,0)
+bucketHint:SetPoint("RIGHT",bSettings,"RIGHT",-8,0)
+
+local bSearchLbl=W:Label(bSettings,"Search",12)
+bSearchLbl:SetPoint("TOPLEFT",bucketHint,"BOTTOMLEFT",0,-6)
+local bSearch=W:EditBox(bSettings,220,20)
 bSearch:SetPoint("LEFT",bSearchLbl,"RIGHT",8,0)
-bSearch:SetPoint("RIGHT",right,"TOPRIGHT",-LIST_RIGHT_INSET,-10)
+bSearch:SetPoint("RIGHT",bSettings,"RIGHT",-8,0)
 bSearch:SetJustifyH("LEFT")
 Page._bucketSearch=bSearch
 bSearch:SetScript("OnTextChanged",function() Page:UpdateBucketList(true) end)
+
 local bHeaders=CreateFrame("Frame",nil,right)
-bHeaders:SetPoint("TOPLEFT",bSearchLbl,"BOTTOMLEFT",0,-12)
+bHeaders:SetPoint("TOPLEFT",bSettings,"BOTTOMLEFT",0,-12)
 bHeaders:SetPoint("TOPRIGHT",right,"TOPRIGHT",-LIST_RIGHT_INSET,-12)
 bHeaders:SetHeight(18)
 local bName=W:Button(bHeaders,"Name",BNAME_W,18,function() Page:ToggleBucketSort("name") end)
@@ -389,10 +426,10 @@ bName:SetPoint("LEFT",bHeaders,"LEFT",B_START_X,0)
 local bStacks=W:Button(bHeaders,"Stacks",BSTACKS_W,18,function() Page:ToggleBucketSort("stacks") end)
 bStacks:SetPoint("LEFT",bName,"RIGHT",4,0)
 local bList=CreateFrame("Frame",nil,right)
-bList:SetPoint("TOPLEFT",bHeaders,"BOTTOMLEFT",0,-8)
-bList:SetPoint("TOPRIGHT",right,"TOPRIGHT",-LIST_RIGHT_INSET,-8)
-bList:SetPoint("BOTTOMRIGHT",right,"BOTTOMRIGHT",-LIST_RIGHT_INSET,198)
-bList:SetPoint("BOTTOMLEFT",right,"BOTTOMLEFT",10,198)
+bList:SetPoint("TOPLEFT",bHeaders,"BOTTOMLEFT",0,4)
+bList:SetPoint("TOPRIGHT",right,"TOPRIGHT",-LIST_RIGHT_INSET,4)
+bList:SetPoint("BOTTOMRIGHT",right,"BOTTOMRIGHT",-LIST_RIGHT_INSET,10)
+bList:SetPoint("BOTTOMLEFT",right,"BOTTOMLEFT",10,10)
 local bColSep=CreateFrame("Frame",nil,right)
 bColSep:SetPoint("TOPLEFT",bHeaders,"TOPLEFT",0,0)
 bColSep:SetPoint("BOTTOMRIGHT",bList,"BOTTOMRIGHT",0,0)
@@ -457,7 +494,7 @@ end
 bList:SetScript("OnMouseWheel",function(_,delta) bwheel(delta) end)
 bScroll:SetScript("OnMouseWheel",function(_,delta) bwheel(delta) end)
 local bRows={}
-local BROWS=11
+local BROWS=8
 local function parseKey(k)
   local sid=tonumber(string.match(k,"^(%d+):") or 0) or 0
   local q=tonumber(string.match(k,":(%d+)$") or 0) or 0
@@ -525,41 +562,6 @@ for i=1,BROWS do
   r._del=del
   bRows[i]=r
 end
-local bSettings=CreateFrame("Frame",nil,right)
-bSettings:SetPoint("BOTTOMLEFT",right,"BOTTOMLEFT",10,10)
-bSettings:SetPoint("BOTTOMRIGHT",right,"BOTTOMRIGHT",-10,10)
-bSettings:SetHeight(130)
-local sbg=bSettings:CreateTexture(nil,"BACKGROUND")
-sbg:SetAllPoints(bSettings)
-sbg:SetTexture("Interface\\Buttons\\WHITE8X8")
-sbg:SetVertexColor(0.04,0.06,0.10,0.40)
-local selName=W:Label(bSettings,"",12)
-selName:SetAlpha(0)
-local newName=W:EditBox(bSettings,220,20)
-newName:SetPoint("TOPLEFT",bSettings,"TOPLEFT",8,-10)
-local btnCreate=W:Button(bSettings,"Create Bucket",110,20,function()
-  local pr=Page:EnsureBuckets()
-  if not pr then return end
-  local nm=newName:GetText() or ""
-  nm=string.gsub(nm,"^%s+","")
-  nm=string.gsub(nm,"%s+$","")
-  if nm=="" then return end
-  local bid="b"..tostring(GetTime())
-  pr.buckets[bid]={name=nm,maxStacks=0,echoKeys={}}
-  Page._bucketSelId=bid
-  newName:SetText("")
-  Page:UpdateBucketPanel()
-end)
-	btnCreate:SetPoint("TOPRIGHT",bSettings,"TOPRIGHT",-8,-10)
-	newName:SetPoint("RIGHT",btnCreate,"LEFT",-8,0)
-	local bucketHint=T:Font(bSettings,11,"")
-	bucketHint:SetFont("Fonts\\MORPHEUS.TTF",11,"")
-	bucketHint:SetJustifyH("CENTER")
-	bucketHint:SetText("It puts the lotion in the bucket")
-	bucketHint:SetAlpha(0.65)
-	bucketHint:SetPoint("TOP",btnCreate,"BOTTOM",0,-6)
-	bucketHint:SetPoint("LEFT",bSettings,"LEFT",8,0)
-	bucketHint:SetPoint("RIGHT",bSettings,"RIGHT",-8,0)
 Page._bucketSelName=selName
 Page._bucketRows=bRows
 Page._bucketScroll=bScroll

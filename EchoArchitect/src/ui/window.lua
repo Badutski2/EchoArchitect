@@ -94,6 +94,7 @@ function Win:Create()
     {id="history",label="History"},
     {id="logbook",label="Logbook"},
     {id="profiles",label="Profiles"},
+    {id="help",label="Help & Information"},
   }
   f._nav=nav
   f._content=content

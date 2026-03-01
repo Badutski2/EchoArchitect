@@ -14,6 +14,48 @@ end
 local function pr()
   return EA.Profiles and EA.Profiles:GetActiveProfile() or nil
 end
+local function getRunData()
+  if ProjectEbonhold and ProjectEbonhold.PlayerRunService and ProjectEbonhold.PlayerRunService.Get then
+    local ok,rd=pcall(ProjectEbonhold.PlayerRunService.Get)
+    if ok and type(rd)=="table" then return rd end
+  end
+  if _G and _G.EbonholdPlayerRunData then return _G.EbonholdPlayerRunData end
+  return {}
+end
+local function echoesRemaining()
+  local lvl=UnitLevel and UnitLevel("player") or 0
+  local offered=math.min(80,math.max(0,(tonumber(lvl) or 0)-1))
+  local run=EA.Run and EA.Run.GetRun and EA.Run:GetRun() or nil
+  local picks=run and tonumber(run.picksCount or 0) or 0
+  if picks>offered then picks=offered end
+  local rem=offered-picks
+  if rem<0 then rem=0 end
+  return rem
+end
+local function rerollsRemaining(p)
+  local rd=getRunData()
+  local remField=tonumber(rd.remainingRerolls or rd.rerollsRemaining or rd.rerollsLeft or rd.rerollCharges or 0) or 0
+  if remField>0 then return remField end
+  local used=tonumber(rd.usedRerolls or rd.rerollsUsed or 0) or 0
+  local total=tonumber(rd.totalRerolls or rd.rerollsTotal or 0) or 0
+  if total>0 then
+    local rem=total-used
+    if rem<0 then rem=0 end
+    return rem
+  end
+  local maxRow=p and p.automation and tonumber(p.automation.maxRerollsPerOffer) or nil
+  if not maxRow then maxRow=10 end
+  local thisOffer=EA.Engine and EA.Engine.state and tonumber(EA.Engine.state.rerollsThisOffer or 0) or 0
+  local rem=maxRow-thisOffer
+  if rem<0 then rem=0 end
+  return rem
+end
+local function banishesRemaining()
+  if not (ProjectEbonhold and ProjectEbonhold.Constants and ProjectEbonhold.Constants.ENABLE_BANISH_SYSTEM) then return 0 end
+  local rd=getRunData()
+  return tonumber(rd.remainingBanishes or 0) or 0
+end
+
 local function reasonText(r)
   if r=="onlyBlacklisted" then return "Paused: Blacklisted / Negative Only" end
   if r=="multipleAbove" then return "Paused: Threshold Met" end
@@ -135,11 +177,22 @@ function SS:Refresh()
   local eng=EA and EA.Engine and EA.Engine.state
   local enabled=eng and eng.enabled
   local prsn=eng and eng.pausedReason or nil
+  local countsStr=""
+  local a=p and p.automation or nil
+  local showE=a==nil or a.showStartStopRemainingEchoes~=false
+  local showP=a==nil or a.showStartStopRemainingRerolls~=false
+  local showB=a==nil or a.showStartStopRemainingBanishes~=false
+  if showE or showP or showB then
+    local parts={}
+    if showE then parts[#parts+1]="|cff9aa0a6Remaining Echoes:|r |cffffffff"..tostring(echoesRemaining()).."|r" end
+    if showP then parts[#parts+1]="|cff9aa0a6Remaining Rerolls:|r |cffffffff"..tostring(rerollsRemaining(p)).."|r" end
+    if showB then parts[#parts+1]="|cff9aa0a6Remaining Banishes:|r |cffffffff"..tostring(banishesRemaining()).."|r" end
+    countsStr=table.concat(parts,"  |cff9aa0a6•|r  ")
+  end
   if enabled then
     self.btn:SetText("Stop Echo Automation")
     if self.btn._label and self.btn._label.SetTextColor then self.btn._label:SetTextColor(1,0.28,0.28,1) end
-    self.sub:SetText("")
-    self.frame:SetHeight(40)
+    if countsStr~="" then self.sub:SetText(countsStr) self.frame:SetHeight(56) else self.sub:SetText("") self.frame:SetHeight(40) end
   else
     self.btn:SetText("Start Echo Automation")
     if self.btn._label and self.btn._label.SetTextColor then self.btn._label:SetTextColor(0.35,1,0.55,1) end
@@ -154,11 +207,9 @@ function SS:Refresh()
       else
         msg="|cffffb24aPaused:|r |cffffffff"..r.."|r"
       end
-      self.sub:SetText(msg)
-      self.frame:SetHeight(56)
+      if countsStr~="" then self.sub:SetText(msg.."\n"..countsStr) self.frame:SetHeight(70) else self.sub:SetText(msg) self.frame:SetHeight(56) end
     else
-      self.sub:SetText("")
-      self.frame:SetHeight(40)
+      if countsStr~="" then self.sub:SetText(countsStr) self.frame:SetHeight(56) else self.sub:SetText("") self.frame:SetHeight(40) end
     end
   end
 end
