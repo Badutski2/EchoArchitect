@@ -30,17 +30,53 @@ local function onLoaded()
   local panel=CreateFrame("Frame")
   panel.name="EchoArchitect"
   panel:Hide()
-  panel:SetScript("OnShow",function()
-    if GameMenuFrame and GameMenuFrame:IsShown() then HideUIPanel(GameMenuFrame) end
-    if InterfaceOptionsFrame then InterfaceOptionsFrame:Hide() end
-    local f=EA.UI and EA.UI.Window and EA.UI.Window.frame
-    if f and not f:IsShown() then
-      EA.UI.Window:Toggle()
-    end
+  local title=panel:CreateFontString(nil,"ARTWORK","GameFontNormalLarge")
+  title:SetPoint("TOP",panel,"TOP",0,-16)
+  title:SetText("EchoArchitect")
+  local openBtn=CreateFrame("Button",nil,panel,"UIPanelButtonTemplate")
+  openBtn:SetWidth(180)
+  openBtn:SetHeight(28)
+  openBtn:SetPoint("TOP",title,"BOTTOM",0,-22)
+  openBtn:SetText("Open EchoArchitect")
+  local resetBtn=CreateFrame("Button",nil,panel,"UIPanelButtonTemplate")
+  resetBtn:SetWidth(220)
+  resetBtn:SetHeight(28)
+  resetBtn:SetPoint("TOP",openBtn,"BOTTOM",0,-12)
+  resetBtn:SetText("Reset EchoArchitect Frame Position")
+  local function openUI()
+    if GameMenuFrame and GameMenuFrame:IsShown() and type(HideUIPanel)=="function" then HideUIPanel(GameMenuFrame) end
+    if InterfaceOptionsFrame and InterfaceOptionsFrame:IsShown() and type(HideUIPanel)=="function" then HideUIPanel(InterfaceOptionsFrame) end
+    local openOnce=CreateFrame("Frame")
+    local t=0
+    openOnce:SetScript("OnUpdate",function(self,el)
+      t=t+(tonumber(el) or 0)
+      if t<0.01 then return end
+      self:SetScript("OnUpdate",nil)
+      if GameMenuFrame and GameMenuFrame:IsShown() and type(HideUIPanel)=="function" then HideUIPanel(GameMenuFrame) end
+      if InterfaceOptionsFrame and InterfaceOptionsFrame:IsShown() and type(HideUIPanel)=="function" then HideUIPanel(InterfaceOptionsFrame) end
+      local wf=EA.UI and EA.UI.Window and EA.UI.Window.frame
+      if not wf and EA.UI and EA.UI.Window and EA.UI.Window.Create then wf=EA.UI.Window:Create() end
+      if wf and not wf:IsShown() then
+        wf:Show()
+        local db=EchoArchitect_CharDB
+        if db and db.ui and db.ui.window then db.ui.window.shown=true end
+        local id=db and db.ui and db.ui.window and db.ui.window.tab
+        if id and wf._pageFrames and wf._pageFrames[id] then
+          local p=wf._pageFrames[id]
+          p:Hide()
+          p:Show()
+        end
+      end
+    end)
+  end
+  openBtn:SetScript("OnClick",openUI)
+  resetBtn:SetScript("OnClick",function()
+    if EA.UI and EA.UI.Window and EA.UI.Window.ResetPosition then EA.UI.Window:ResetPosition() end
   end)
   if type(InterfaceOptions_AddCategory)=="function" then
     InterfaceOptions_AddCategory(panel)
   end
+
 end
 f:SetScript("OnEvent",function(_,ev,arg1,arg2,arg3,arg4,arg5)
   if ev=="ADDON_LOADED" and arg1==addonName then

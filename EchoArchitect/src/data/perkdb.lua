@@ -54,7 +54,7 @@ EchoArchitect_PerkDB={
 [200246]={ maxStack=1, classMask=1535, minLevel=1, quality=3, groupId=10, requiredSpell=0 },
 [200248]={ maxStack=5, classMask=1535, minLevel=1, quality=2, groupId=62, requiredSpell=0 },
 [200259]={ maxStack=1, classMask=1535, minLevel=1, quality=3, groupId=104, requiredSpell=0 },
-[200270]={ maxStack=1, classMask=1535, minLevel=1, quality=3, groupId=28, requiredSpell=0 },
+[200270]={ maxStack=1, classMask=1405, minLevel=1, quality=3, groupId=28, requiredSpell=0 },
 [200300]={ maxStack=80, classMask=1, minLevel=1, quality=0, groupId=74, requiredSpell=0 },
 [200301]={ maxStack=80, classMask=256, minLevel=1, quality=0, groupId=27, requiredSpell=0 },
 [200302]={ maxStack=80, classMask=64, minLevel=1, quality=0, groupId=37, requiredSpell=0 },

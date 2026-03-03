@@ -1,8 +1,8 @@
 ## Interface: 30300
-## Title: |cff7b2cffEcho|cff00b3ffArchitect|r |cffaaaaaa(v3.5.0)|r
+## Title: |cff7b2cffEcho|cff00b3ffArchitect|r |cffaaaaaa(v3.6.0)|r
 ## Notes: Intelligent Echo optimizer for Ebonhold. Handles picks, rerolls, banishes, weights & full session logbook tracking.
 ## Author: EchoArchitect
-## Version: 3.5.0
+## Version: 3.6.0
 ## SavedVariables: EchoArchitect_Logbook
 ## SavedVariablesPerCharacter: EchoArchitect_CharDB
 
@@ -22,6 +22,7 @@ src\ui\window.lua
 src\ui\pages_dashboard.lua
 src\ui\pages_settings.lua
 src\ui\pages_library.lua
+src\ui\pages_current_echoes.lua
 src\ui\pages_history.lua
 src\ui\pages_logbook.lua
 src\ui\pages_profiles.lua

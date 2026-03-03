@@ -15,11 +15,17 @@ local function pr()
   return EA.Profiles and EA.Profiles:GetActiveProfile() or nil
 end
 local function getRunData()
-  if ProjectEbonhold and ProjectEbonhold.PlayerRunService and ProjectEbonhold.PlayerRunService.Get then
-    local ok,rd=pcall(ProjectEbonhold.PlayerRunService.Get)
-    if ok and type(rd)=="table" then return rd end
+  if ProjectEbonhold and ProjectEbonhold.PlayerRunService then
+    if ProjectEbonhold.PlayerRunService.GetCurrentData then
+      local ok,res=pcall(ProjectEbonhold.PlayerRunService.GetCurrentData)
+      if ok and type(res)=="table" then return res end
+    end
+    if ProjectEbonhold.PlayerRunService.Get then
+      local ok,res=pcall(ProjectEbonhold.PlayerRunService.Get)
+      if ok and type(res)=="table" then return res end
+    end
   end
-  if _G and _G.EbonholdPlayerRunData then return _G.EbonholdPlayerRunData end
+  if type(_G.EbonholdPlayerRunData)=="table" then return _G.EbonholdPlayerRunData end
   return {}
 end
 local function echoesRemaining()
@@ -53,7 +59,16 @@ end
 local function banishesRemaining()
   if not (ProjectEbonhold and ProjectEbonhold.Constants and ProjectEbonhold.Constants.ENABLE_BANISH_SYSTEM) then return 0 end
   local rd=getRunData()
-  return tonumber(rd.remainingBanishes or 0) or 0
+  local remField=tonumber(rd.remainingBanishes or rd.banishesRemaining or rd.banishesLeft or rd.banishCharges or 0) or 0
+  if remField>0 then return remField end
+  local used=tonumber(rd.usedBanishes or rd.banishesUsed or 0) or 0
+  local total=tonumber(rd.totalBanishes or rd.banishesTotal or 0) or 0
+  if total>0 then
+    local rem=total-used
+    if rem<0 then rem=0 end
+    return rem
+  end
+  return 0
 end
 
 local function reasonText(r)

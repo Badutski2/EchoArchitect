@@ -39,6 +39,12 @@ function Win:Create()
   f:SetWidth(1080)
   f:SetHeight(560)
   f:SetPoint("CENTER",UIParent,"CENTER",0,0)
+  local db=getDB()
+  local ui=db and db.ui and db.ui.window
+  if ui and ui.x and ui.y then
+    f:ClearAllPoints()
+    f:SetPoint("CENTER",UIParent,"CENTER",ui.x,ui.y)
+  end
   if not self._esc then
     if UISpecialFrames then
       tinsert(UISpecialFrames,"EchoArchitectMainFrame")
@@ -91,6 +97,7 @@ function Win:Create()
     {id="dashboard",label="Dashboard"},
     {id="settings",label="Settings"},
     {id="library",label="Echo Library"},
+    {id="current_echoes",label="Current Echoes"},
     {id="history",label="History"},
     {id="logbook",label="Logbook"},
     {id="profiles",label="Profiles"},
@@ -181,12 +188,41 @@ function Win:ShowTab(id)
   local db=getDB()
   if db and db.ui and db.ui.window then db.ui.window.tab=id end
 end
+function Win:ResetPosition()
+  local f=self:Create()
+  f:ClearAllPoints()
+  f:SetPoint("CENTER",UIParent,"CENTER",0,0)
+  local db=getDB()
+  if db then
+    db.ui=db.ui or {}
+    db.ui.window=db.ui.window or {}
+    db.ui.window.x=nil
+    db.ui.window.y=nil
+  end
+end
 function Win:Toggle()
   local f=self:Create()
-  if f:IsShown() then f:Hide() else f:Show() end
+  if f:IsShown() then
+    f:Hide()
+  else
+    f:Show()
+    local db=getDB()
+    local id=db and db.ui and db.ui.window and db.ui.window.tab
+    if not id then
+      for k,p in pairs(f._pageFrames) do
+        if p and p:IsShown() then id=k break end
+      end
+    end
+    if id and f._pageFrames[id] then
+      local p=f._pageFrames[id]
+      p:Hide()
+      p:Show()
+    end
+  end
   local db=getDB()
   if db and db.ui and db.ui.window then db.ui.window.shown=f:IsShown() end
 end
+
 
 function Win:ApplyScale()
   local f=self.frame

@@ -30,6 +30,34 @@ local function solid(parent,layer,r,g,b,a)
   return tx
 end
 
+local function svcSelect(spellId)
+  if not spellId or spellId==0 then return end
+  if ProjectEbonhold and ProjectEbonhold.PerkService and ProjectEbonhold.PerkService.SelectPerk then
+    pcall(ProjectEbonhold.PerkService.SelectPerk,spellId) return
+  end
+  if ProjectEbonhold and ProjectEbonhold.Perks and ProjectEbonhold.Perks.SelectPerk then
+    pcall(ProjectEbonhold.Perks.SelectPerk,spellId) return
+  end
+end
+local function svcReroll()
+  if ProjectEbonhold and ProjectEbonhold.PerkService and ProjectEbonhold.PerkService.RequestReroll then
+    pcall(ProjectEbonhold.PerkService.RequestReroll) return
+  end
+  if ProjectEbonhold and ProjectEbonhold.Perks and ProjectEbonhold.Perks.RequestReroll then
+    pcall(ProjectEbonhold.Perks.RequestReroll) return
+  end
+end
+local function svcBanish(idx0)
+  if idx0==nil then return end
+  if ProjectEbonhold and ProjectEbonhold.PerkService and ProjectEbonhold.PerkService.BanishPerk then
+    pcall(ProjectEbonhold.PerkService.BanishPerk,idx0) return
+  end
+  if ProjectEbonhold and ProjectEbonhold.Perks and ProjectEbonhold.Perks.BanishPerk then
+    pcall(ProjectEbonhold.Perks.BanishPerk,idx0) return
+  end
+end
+
+
 local pad=12
 local c=T.c
 
@@ -100,7 +128,7 @@ i2Text:SetWordWrap(true)
 i2Text:SetNonSpaceWrap(true)
 i2Text:SetText("Profiles keep your Settings and Echo weights together.\n\nMake a Profile per build, then switch anytime.\nExport/import is for sharing or backups.\n\nNeed help or found a bug?\nReach out on the Discord.")
 
-local i3Title=W:Label(col3,"Changelog [v3.5.0]",14)
+local i3Title=W:Label(col3,"Changelog [v3.6.0]",14)
 i3Title:SetPoint("TOP",col3,"TOP",0,0)
 
 local i3Text=T:Font(col3,12,"")
@@ -110,7 +138,13 @@ i3Text:SetJustifyH("LEFT")
 i3Text:SetJustifyV("TOP")
 i3Text:SetWordWrap(true)
 i3Text:SetNonSpaceWrap(true)
-i3Text:SetText("- Echo Library: Inspector moved\n- Echo Library/Buckets resized\n- Help & Info page\n- Start/Stop: Picks left\n- Start/Stop: Banishes left\n- Start/Stop: Rerolls left")
+i3Text:SetText([[
+• Added Interface Options buttons
+• Added Current Echoes display
+• Added Manual Banish, Reroll & Select buttons to Dashboard
+• Fixed rare History log inconsistency
+• Fixed ESC/Interface menu opening issues
+]])
 
 local madeRow=CreateFrame("Frame",nil,col3)
 madeRow:SetPoint("BOTTOMRIGHT",col3,"BOTTOMRIGHT",0,0)
@@ -183,6 +217,11 @@ T:ApplyPanel(right,"navy")
 local lTitle=W:Label(left,"Next Action",14)
 lTitle:SetPoint("TOPLEFT",left,"TOPLEFT",10,-8)
 
+local lRemain=T:Font(left,11,"")
+lRemain:SetPoint("TOPRIGHT",left,"TOPRIGHT",-10,-6)
+lRemain:SetJustifyH("RIGHT")
+lRemain:SetText("")
+
 local rTitle=W:Label(right,"Progress",14)
 rTitle:SetPoint("TOPLEFT",right,"TOPLEFT",10,-8)
 
@@ -198,13 +237,19 @@ local function makeChoiceRow(parent,y)
   icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
   local name=T:Font(row,12,"")
   name:SetPoint("LEFT",icon,"RIGHT",8,0)
-  name:SetPoint("RIGHT",row,"RIGHT",-110,0)
+  name:SetPoint("RIGHT",row,"RIGHT",-190,0)
   name:SetText("")
   local score=T:Font(row,12,"")
-  score:SetPoint("RIGHT",row,"RIGHT",-8,0)
+  score:SetPoint("RIGHT",row,"RIGHT",-130,0)
   score:SetJustifyH("RIGHT")
   score:SetText("")
-  return {row=row,icon=icon,name=name,score=score}
+  local btnSelect=W:Button(row,"Select",56,20)
+  btnSelect:SetPoint("RIGHT",row,"RIGHT",-6,0)
+  local btnBanish=W:Button(row,"Banish",56,20)
+  btnBanish:SetPoint("RIGHT",btnSelect,"LEFT",-6,0)
+  btnSelect:Hide()
+  btnBanish:Hide()
+  return {row=row,icon=icon,name=name,score=score,btnSelect=btnSelect,btnBanish=btnBanish}
 end
 
 local function setChoiceRow(r,data)
@@ -230,9 +275,13 @@ local row1=makeChoiceRow(left,-40)
 local row2=makeChoiceRow(left,-88)
 local row3=makeChoiceRow(left,-136)
 
+local btnReroll=W:Button(left,"Reroll",80,20, function() svcReroll() end)
+btnReroll:SetPoint("TOPRIGHT",left,"TOPRIGHT",-10,-182)
+btnReroll:Hide()
+
 local actionLine=T:Font(left,12,"")
 actionLine:SetPoint("TOPLEFT",left,"TOPLEFT",10,-186)
-actionLine:SetPoint("TOPRIGHT",left,"TOPRIGHT",-10,-186)
+actionLine:SetPoint("TOPRIGHT",btnReroll,"TOPLEFT",-8,0)
 actionLine:SetText("")
 
 local reasonLine=T:Font(left,11,"")
@@ -347,6 +396,7 @@ local function update()
   if type(snap)~="table" then
     statusLeft:SetText("Engine: unavailable")
     statusRight:SetText("")
+    if lRemain then lRemain:SetText("") end
     btnStart:Hide()
     btnStop:Hide()
     actionLine:SetText("Waiting for engine")
@@ -400,6 +450,9 @@ local function update()
   local rr=tonumber(snap.rerollsRemaining or 0) or 0
   local br=tonumber(snap.banishesRemaining or 0) or 0
   statusRight:SetText(string.format("Rerolls: %d  Banishes: %d",rr,br))
+  if lRemain then
+    lRemain:SetText(string.format("Remaining Banishes: %d\nRemaining Rerolls: %d",br,rr))
+  end
 
   local offer=snap.offer
   local dec=snap.decision
@@ -430,6 +483,37 @@ local function update()
     actionLine:SetText("Waiting for offer")
     reasonLine:SetText("")
   end
+
+  local manualActive=(not enabled) and offer and type(offer)=="table" and #offer>0
+  if manualActive then btnReroll:Show() else btnReroll:Hide() end
+  if btnReroll.SetEnabled then btnReroll:SetEnabled(manualActive and rr>0) end
+  if manualActive then
+    local function bindRow(r,i)
+      local o=offer[i]
+      if o and o.spellId then
+        r.btnSelect:Show()
+        r.btnBanish:Show()
+        r.btnSelect:SetScript("OnClick",function() svcSelect(tonumber(o.spellId) or 0) end)
+        r.btnBanish:SetScript("OnClick",function() svcBanish(i-1) end)
+        if r.btnSelect.SetEnabled then r.btnSelect:SetEnabled(true) end
+        if r.btnBanish.SetEnabled then r.btnBanish:SetEnabled(br>0) end
+      else
+        r.btnSelect:Hide()
+        r.btnBanish:Hide()
+      end
+    end
+    bindRow(row1,1)
+    bindRow(row2,2)
+    bindRow(row3,3)
+  else
+    row1.btnSelect:Hide()
+    row1.btnBanish:Hide()
+    row2.btnSelect:Hide()
+    row2.btnBanish:Hide()
+    row3.btnSelect:Hide()
+    row3.btnBanish:Hide()
+  end
+
 
   local picks=tonumber(snap.picksCount or 0) or 0
   local el=tonumber(snap.echoLevel or 2) or 2
