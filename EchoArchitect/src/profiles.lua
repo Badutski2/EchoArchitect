@@ -3,12 +3,15 @@ EchoArchitect=EchoArchitect or {}
 local EA=EchoArchitect
 EA.Profiles=EA.Profiles or {}
 local P=EA.Profiles
-local function deepCopy(dst,src)
+local function deepCopy(dst,src,seen)
   if type(dst)~="table" then dst={} end
   if type(src)~="table" then return dst end
+  seen=seen or {}
+  if seen[src] then return seen[src] end
+  seen[src]=dst
   for k,v in pairs(src) do
     if type(v)=="table" then
-      dst[k]=deepCopy(dst[k],v)
+      dst[k]=deepCopy(dst[k],v,seen)
     else
       dst[k]=v
     end

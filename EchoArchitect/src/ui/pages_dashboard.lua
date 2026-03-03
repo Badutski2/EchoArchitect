@@ -128,7 +128,7 @@ i2Text:SetWordWrap(true)
 i2Text:SetNonSpaceWrap(true)
 i2Text:SetText("Profiles keep your Settings and Echo weights together.\n\nMake a Profile per build, then switch anytime.\nExport/import is for sharing or backups.\n\nNeed help or found a bug?\nReach out on the Discord.")
 
-local i3Title=W:Label(col3,"Changelog [v3.6.0]",14)
+local i3Title=W:Label(col3,"Changelog [v3.6.2]",14)
 i3Title:SetPoint("TOP",col3,"TOP",0,0)
 
 local i3Text=T:Font(col3,12,"")
@@ -139,11 +139,9 @@ i3Text:SetJustifyV("TOP")
 i3Text:SetWordWrap(true)
 i3Text:SetNonSpaceWrap(true)
 i3Text:SetText([[
-• Added Interface Options buttons
-• Added Current Echoes display
-• Added Manual Banish, Reroll & Select buttons to Dashboard
-• Fixed rare History log inconsistency
-• Fixed ESC/Interface menu opening issues
+• Fixed issue where some settings were not applied correctly.
+• Fixed tooltip issue in Current Echoes.
+• Fixed Profile Import Issue.
 ]])
 
 local madeRow=CreateFrame("Frame",nil,col3)

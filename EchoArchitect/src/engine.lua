@@ -264,6 +264,24 @@ local function selectPerk(spellId)
   end
   return false
 end
+local function trySelectPerk(choices,startI)
+  if type(choices)~="table" or #choices==0 then return false,nil end
+  local first=tonumber(startI or 1) or 1
+  if first<1 then first=1 end
+  if first>#choices then first=#choices end
+  for pass=1,2 do
+    local a=(pass==1) and first or 1
+    local b=(pass==1) and #choices or (first-1)
+    for i=a,b do
+      local c=choices[i]
+      if c and c.spellId then
+        local ok=selectPerk(c.spellId)
+        if ok then return true,i end
+      end
+    end
+  end
+  return false,nil
+end
 local function requestReroll()
   if ProjectEbonhold and ProjectEbonhold.PerkService and ProjectEbonhold.PerkService.RequestReroll then
     ProjectEbonhold.PerkService.RequestReroll() return true
@@ -294,6 +312,7 @@ end
 decide=function(pr,choices)
   local scores=buildScorePack(pr,choices)
   local a=pr and pr.automation or nil
+  local canPick=(a and a.enablePick) and true or false
   local thr=tonumber(a and a.threshold or 0) or 0
   if a and a.pauseIfMultipleAbove and thr>0 then
     local n=0
@@ -321,7 +340,7 @@ decide=function(pr,choices)
       bestAboveI=i
     end
   end
-  if bestAboveI then
+  if bestAboveI and canPick then
     return {action="pick",reason="aboveMinKeep",scores=scores,bestI=bestAboveI}
   end
   local anyBL=false
@@ -357,6 +376,9 @@ decide=function(pr,choices)
   end
   if canReroll then
     return {action="reroll",reason="noAboveMinKeep",scores=scores,bestI=1}
+  end
+  if not canPick then
+    return {action="pause",reason="pickDisabled",scores=scores,bestI=1}
   end
   local bestS=-1e18
   for i=1,#scores do
@@ -439,6 +461,7 @@ local function explainDecision(pr,choices,res)
   d.rerollsThisOffer=tonumber(E.state.rerollsThisOffer) or 0
   d.enableReroll=pr and pr.automation and pr.automation.enableReroll or false
   d.enableBanish=pr and pr.automation and pr.automation.enableBanish or false
+  d.enablePick=pr and pr.automation and pr.automation.enablePick or false
   d.threshold=tonumber(pr and pr.automation and pr.automation.threshold or 0) or 0
   d.pauseIfMultipleAbove=pr and pr.automation and pr.automation.pauseIfMultipleAbove or false
   d.pauseIfOnlyBlacklisted=pr and pr.automation and pr.automation.pauseIfOnlyBlacklisted or false
@@ -487,12 +510,16 @@ local function explainDecision(pr,choices,res)
     d.blacklistedIndices=blIdx
   end
   d.whyNot={}
+  d.whyNot.pick={}
   d.whyNot.reroll={}
   d.whyNot.banish={}
+  if not d.enablePick then
+    d.whyNot.pick[#d.whyNot.pick+1]="pickDisabled"
+  end
   if not d.enableReroll then
     d.whyNot.reroll[#d.whyNot.reroll+1]="rerollDisabled"
   else
-    if (tonumber(d.echoPick) or 0)~=(tonumber(d.minLevelBeforeRerolling) or 0) then d.whyNot.reroll[#d.whyNot.reroll+1]="echoPickNotAtMin" end
+    if (tonumber(d.echoPick) or 0)<(tonumber(d.minLevelBeforeRerolling) or 0) then d.whyNot.reroll[#d.whyNot.reroll+1]="echoPickBelowMin" end
     if d.rerollsRemaining<=0 then d.whyNot.reroll[#d.whyNot.reroll+1]="noRerollsRemaining" end
     if d.maxContinuousRerolls>0 and d.contRerolls>=d.maxContinuousRerolls then d.whyNot.reroll[#d.whyNot.reroll+1]="maxContinuousRerollsReached" end
   end
@@ -658,11 +685,12 @@ local function applyDecision(res,choices,pr)
     E.state.contRerolls=0
     local c=choices[res.bestI]
     if c then
-      Log:RecordPick(c)
       E.state._autoAction="pick"
       E.state._expectNewOffer="pick"
-      local ok=selectPerk(c.spellId)
+      local ok,pickedI=trySelectPerk(choices,res.bestI)
       if ok then
+        local picked=choices[pickedI] or c
+        Log:RecordPick(picked)
         Run:AdvancePick()
         if Run:MarkCompletedIfNeeded() then
           Log:RecordRunCompleted()
@@ -773,6 +801,8 @@ function E:Tick()
       end
       self.state._offerSig=sig
       self.state._expectNewOffer=nil
+      self.state._newOfferSeenAt=now()
+      self.state.lastAct=0
     end
     local seen=self.state._offerSeen
     local new={}
@@ -792,7 +822,9 @@ function E:Tick()
   if not canAct(pr) then return end
   local t=now()
   local d=actDelay(pr)
-  if t-(tonumber(self.state.lastAct) or 0)<d then return end
+  local newOfferT=tonumber(self.state._newOfferSeenAt or 0) or 0
+  local fastWindow=(newOfferT>0 and (t-newOfferT)<=0.25)
+  if (not fastWindow) and t-(tonumber(self.state.lastAct) or 0)<d then return end
   if not offer then return end
 local res=decide(pr,offer)
   self.state.lastAct=t

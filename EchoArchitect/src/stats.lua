@@ -10,22 +10,46 @@ local statKeys={
   AP=true,SP=true,CRIT=true,HASTE=true,HIT=true,
   ARMOR=true,RESIL=true,
 }
+local labels={
+  STR={_G.ITEM_MOD_STRENGTH_SHORT or "Strength",_G.SPELL_STAT1_NAME or "Strength"},
+  AGI={_G.ITEM_MOD_AGILITY_SHORT or "Agility",_G.SPELL_STAT2_NAME or "Agility"},
+  STA={_G.ITEM_MOD_STAMINA_SHORT or "Stamina",_G.SPELL_STAT3_NAME or "Stamina"},
+  INT={_G.ITEM_MOD_INTELLECT_SHORT or "Intellect",_G.SPELL_STAT4_NAME or "Intellect"},
+  SPI={_G.ITEM_MOD_SPIRIT_SHORT or "Spirit",_G.SPELL_STAT5_NAME or "Spirit"},
+  AP={_G.ITEM_MOD_ATTACK_POWER_SHORT or "Attack Power","Attack Power"},
+  SP={_G.ITEM_MOD_SPELL_POWER_SHORT or "Spell Power","Spell Power"},
+  ARMOR={_G.ARMOR or "Armor"},
+  RESIL={_G.RESILIENCE or "Resilience","Resilience"},
+}
+local function lower(s)
+  return string.lower(tostring(s or ""))
+end
+local function hasAny(line,list)
+  local l=lower(line)
+  for i=1,#list do
+    local v=list[i]
+    if v and v~="" and string.find(l,lower(v),1,true) then return true end
+  end
+  return false
+end
 local function add(dst,k,v)
   if not k or not v then return end
   dst[k]=(tonumber(dst[k]) or 0)+(tonumber(v) or 0)
 end
 local function parseLine(line,dst)
   if not line or line=="" then return end
-  local n
-  n=string.match(line,"%+%s*(%d+)%s+Strength") if n then add(dst,"STR",n) end
-  n=string.match(line,"%+%s*(%d+)%s+Agility") if n then add(dst,"AGI",n) end
-  n=string.match(line,"%+%s*(%d+)%s+Stamina") if n then add(dst,"STA",n) end
-  n=string.match(line,"%+%s*(%d+)%s+Intellect") if n then add(dst,"INT",n) end
-  n=string.match(line,"%+%s*(%d+)%s+Spirit") if n then add(dst,"SPI",n) end
-  n=string.match(line,"%+%s*(%d+)%s+Attack Power") if n then add(dst,"AP",n) end
-  n=string.match(line,"%+%s*(%d+)%s+Spell Power") if n then add(dst,"SP",n) end
-  n=string.match(line,"%+%s*(%d+)%s+Armor") if n then add(dst,"ARMOR",n) end
-  n=string.match(line,"%+%s*(%d+)%s+Resilience") if n then add(dst,"RESIL",n) end
+  local n=string.match(line,"%+%s*(%d+)")
+  if n then
+    if hasAny(line,labels.STR) then add(dst,"STR",n) end
+    if hasAny(line,labels.AGI) then add(dst,"AGI",n) end
+    if hasAny(line,labels.STA) then add(dst,"STA",n) end
+    if hasAny(line,labels.INT) then add(dst,"INT",n) end
+    if hasAny(line,labels.SPI) then add(dst,"SPI",n) end
+    if hasAny(line,labels.AP) then add(dst,"AP",n) end
+    if hasAny(line,labels.SP) then add(dst,"SP",n) end
+    if hasAny(line,labels.ARMOR) then add(dst,"ARMOR",n) end
+    if hasAny(line,labels.RESIL) then add(dst,"RESIL",n) end
+  end
   n=string.match(line,"(%d+)%s*%%.*critical") if n then add(dst,"CRIT",n) end
   n=string.match(line,"(%d+)%s*%%.*haste") if n then add(dst,"HASTE",n) end
   n=string.match(line,"(%d+)%s*%%.*hit") if n then add(dst,"HIT",n) end

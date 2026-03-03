@@ -81,10 +81,132 @@ function S:Import(str)
   if string.sub(str,1,4)~="EA1:" then return nil,"version" end
   local body=string.sub(str,5)
   if body=="" then return nil,"empty" end
-  local f,err=loadstring("return "..body)
-  if not f then return nil,err end
-  local ok,res=pcall(f)
-  if not ok then return nil,res end
+  local i=1
+  local n=string.len(body)
+  local function skipWS()
+    while i<=n do
+      local c=string.sub(body,i,i)
+      if c==" " or c=="\n" or c=="\r" or c=="\t" then
+        i=i+1
+      else
+        break
+      end
+    end
+  end
+  local function parseString()
+    if string.sub(body,i,i)~='"' then return nil,"string" end
+    i=i+1
+    local out={}
+    while i<=n do
+      local c=string.sub(body,i,i)
+      if c=='"' then
+        i=i+1
+        return table.concat(out,""),nil
+      elseif c=="\\" then
+        i=i+1
+        local e=string.sub(body,i,i)
+        if e=="n" then out[#out+1]="\n"
+        elseif e=="r" then out[#out+1]="\r"
+        elseif e=="t" then out[#out+1]="\t"
+        elseif e=='"' then out[#out+1]='"'
+        elseif e=="\\" then out[#out+1]="\\"
+        else return nil,"escape" end
+        i=i+1
+      else
+        out[#out+1]=c
+        i=i+1
+      end
+    end
+    return nil,"unterminated"
+  end
+  local function parseNumber()
+    local s=i
+    if string.sub(body,i,i)=="-" then i=i+1 end
+    local digits=false
+    while i<=n do
+      local c=string.sub(body,i,i)
+      if c>="0" and c<="9" then digits=true i=i+1 else break end
+    end
+    if string.sub(body,i,i)=="." then
+      i=i+1
+      while i<=n do
+        local c=string.sub(body,i,i)
+        if c>="0" and c<="9" then digits=true i=i+1 else break end
+      end
+    end
+    if not digits then return nil,"number" end
+    local txt=string.sub(body,s,i-1)
+    local num=tonumber(txt)
+    if num==nil then return nil,"number" end
+    if num~=num or num==math.huge or num==-math.huge then num=0 end
+    return num,nil
+  end
+  local parseValue
+  local function parseKey()
+    skipWS()
+    if string.sub(body,i,i)~="[" then return nil,"keyopen" end
+    i=i+1
+    skipWS()
+    local kc=string.sub(body,i,i)
+    local key,err
+    if kc=='"' then
+      key,err=parseString()
+      if err then return nil,err end
+    else
+      key,err=parseNumber()
+      if err then return nil,err end
+    end
+    skipWS()
+    if string.sub(body,i,i)~="]" then return nil,"keyclose" end
+    i=i+1
+    skipWS()
+    if string.sub(body,i,i)~="=" then return nil,"keyeq" end
+    i=i+1
+    return key,nil
+  end
+  local function parseTable(depth)
+    if depth>50 then return {},nil end
+    skipWS()
+    if string.sub(body,i,i)~="{" then return nil,"tableopen" end
+    i=i+1
+    local out={}
+    skipWS()
+    if string.sub(body,i,i)=="}" then i=i+1 return out,nil end
+    while i<=n do
+      local key,err=parseKey()
+      if err then return nil,err end
+      local val
+      val,err=parseValue(depth+1)
+      if err then return nil,err end
+      out[key]=val
+      skipWS()
+      local c=string.sub(body,i,i)
+      if c=="," then
+        i=i+1
+      elseif c=="}" then
+        i=i+1
+        return out,nil
+      else
+        return nil,"tabledelim"
+      end
+    end
+    return nil,"tableeof"
+  end
+  parseValue=function(depth)
+    skipWS()
+    local c=string.sub(body,i,i)
+    if c=="{" then return parseTable(depth) end
+    if c=='"' then return parseString() end
+    if c=="-" or (c>="0" and c<="9") then return parseNumber() end
+    if string.sub(body,i,i+3)=="true" then i=i+4 return true,nil end
+    if string.sub(body,i,i+4)=="false" then i=i+5 return false,nil end
+    if string.sub(body,i,i+2)=="nil" then i=i+3 return nil,nil end
+    return nil,"value"
+  end
+  local res,err=parseValue(0)
+  if err then return nil,err end
+  skipWS()
+  if i<=n then return nil,"trailing" end
   if type(res)~="table" then return nil,"notable" end
   return res,nil
 end
